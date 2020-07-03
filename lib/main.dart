@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:wallpaperplugin/wallpaperplugin.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
+import 'package:shimmer/shimmer.dart';
 
 void main() => runApp(MyApp());
 
@@ -38,9 +40,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-//  ScrollController controller = new ScrollController();
-//  List textshow = new List(10);
-  var _pg = 1;
+  var _pg = Random.secure().nextInt(100);
   bool isShaking = true;
   ShakeDetector detector;
   @override
@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _pg++;
         data.clear();
       });
-//      controller = new ScrollController();
       Future.delayed(Duration(seconds: 2), () {
         setState(() {
           isShaking = true;
@@ -88,20 +87,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return "Success";
   }
 
-  static Future<bool> _checkAndGetPermission() async {
-    final PermissionStatus permissionStatus = await PermissionHandler()
-        .checkPermissionStatus(PermissionGroup.storage);
-    if (permissionStatus != PermissionStatus.granted) {
-      final Map<PermissionGroup, PermissionStatus> permissions =
-          await PermissionHandler()
-              .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
-      if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
-        return null;
-      }
-    }
-
-    return true;
-  }
+//  static Future<bool> _checkAndGetPermission() async {
+//    final PermissionStatus permissionStatus = await PermissionHandler()
+//        .checkPermissionStatus(PermissionGroup.storage);
+//    if (permissionStatus != PermissionStatus.granted) {
+//      final Map<PermissionGroup, PermissionStatus> permissions =
+//          await PermissionHandler()
+//              .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
+//      if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
+//        return null;
+//      }
+//    }
+//
+//    return true;
+//  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           barrierDismissible: true,
                           builder: (context) {
                             return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                               title: Container(
                                 child: Column(
 //                                  crossAxisAlignment: CrossAxisAlignment.center,
@@ -236,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                   ],
-//                            mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                 ),
                               )
@@ -338,11 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 itemCount: data == null ? 0 : data.length,
-//        pagination: new SwiperPagination(),
-//              control: new SwiperControl(),
                 loop: false,
-//        autoplayDisableOnInteraction: false,
-//        index: 7,
               )
             : Container(
                 width: size.width,
@@ -366,24 +363,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   downloadImg(BuildContext context, String url) async {
-    if (_checkAndGetPermission() != null) {
-      Dio dio = new Dio();
-      final Directory appDirectory = await getExternalStorageDirectory();
-      final Directory directory =
-          await Directory(appDirectory.path + "/wallpapers")
-              .create(recursive: true);
-//      final String dir = directory.path;
-      final String dir = "/storage/emulated/0/DCIM/wallpapers";
-      String num = new DateTime.now().toIso8601String();
-      String localpath = "$dir/IMG_$num.jpeg";
+    Dio dio = new Dio();
+    final Directory appDirectory = await getExternalStorageDirectory();
+    final Directory directory =
+        await Directory(appDirectory.path + "/wallpapers")
+            .create(recursive: true);
+    final String dir = directory.path;
+    String num = new DateTime.now().toIso8601String();
+    String localpath = "$dir/IMG_$num.jpeg";
 
-      try {
-        dio.download(url, localpath);
-        print(localpath);
-      } on PlatformException catch (e) {
-        print(e);
-      }
-    } else {}
+    try {
+      dio.download(url, localpath);
+      print(localpath);
+    } on PlatformException catch (e) {
+      print(e);
+    }
+
     Navigator.pop(context);
   }
 }
